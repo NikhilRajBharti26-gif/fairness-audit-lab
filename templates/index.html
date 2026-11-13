@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fairness audit lab</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@500;600&display=swap">
+<style>
+:root{--paper:#F1F3F2;--ink:#15232B;--mut:#56676F;--rule:#CAD4D8;--tint:#E2E8EA;--brick:#B0391F;--teal:#17766B;--blue:#2D5C8E;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0F1A1F;--ink:#E6EDF0;--mut:#9AABB2;--rule:#2B3D46;--tint:#1A2A32;--brick:#F08A6E;--teal:#5FC2B2;--blue:#7FA6D6;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#0F1A1F;--ink:#E6EDF0;--mut:#9AABB2;--rule:#2B3D46;--tint:#1A2A32;--brick:#F08A6E;--teal:#5FC2B2;--blue:#7FA6D6;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:32px 20px 48px}
+h1,h2,h3,output{font-family:"Source Serif 4",Georgia,"Times New Roman",serif;font-weight:600;letter-spacing:-.01em}
+h1{font-size:clamp(34px,6vw,56px);line-height:1.05;margin:0 0 14px}
+h2{font-size:26px;line-height:1.2;margin:0 0 6px}
+h3{font-size:19px;margin:6px 0}
+p{margin:0 0 10px}
+.lead{color:var(--mut);max-width:62ch;font-size:17px}
+.small{font-size:14px;color:var(--mut)}
+section{border-top:1px solid var(--rule);padding:26px 0 30px}
+.flush{border:0;padding-top:0}
+.main{display:grid;grid-template-columns:250px minmax(0,1fr);gap:40px;align-items:start;border-top:1px solid var(--rule);padding-top:26px}
+.controls label{display:block;margin-bottom:18px;font-size:14px;color:var(--mut)}
+.controls b{display:block;font-weight:500;color:var(--ink);margin-bottom:6px}
+.controls output{color:var(--ink);font-size:16px;margin-left:4px}
+select{width:100%;font:inherit;padding:8px 10px;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:3px}
+input[type=range]{width:100%;margin:4px 0 0;accent-color:var(--blue)}
+button{font:inherit;font-weight:500;padding:9px 14px;background:transparent;color:var(--ink);border:1px solid var(--ink);border-radius:3px;cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.gapline{font-size:17px;margin:18px 0 8px}
+.gapline strong{color:var(--brick);font-weight:600}
+.grp{display:grid;grid-template-columns:90px minmax(0,1fr) 64px;gap:14px;align-items:center;margin:16px 0}
+.grp output{font-size:26px;text-align:right}
+.track{position:relative;height:28px;background:var(--tint);border-radius:2px}
+.track i{position:absolute;left:0;top:0;bottom:0;background:var(--blue);border-radius:2px}
+.track b{position:absolute;top:-6px;bottom:-6px;width:3px;margin-left:-1px;background:var(--ink)}
+.track.sm{height:12px}
+.ib{display:grid;grid-template-columns:96px minmax(0,1fr) 56px;gap:10px;align-items:center;font-size:14px;margin:4px 0 8px}
+.ib output{text-align:right;font-size:15px}
+.scroll{overflow-x:auto;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:9px 6px;border-bottom:1px solid var(--rule);text-align:right}
+th{font-weight:500;color:var(--mut);font-size:13px;vertical-align:bottom}
+td:first-child,th:first-child{text-align:left;min-width:150px}
+td{white-space:nowrap}
+.ok{color:var(--teal);font-weight:600}.mid{font-weight:600}.no{color:var(--brick);font-weight:600}
+svg{display:block;width:100%;height:auto;margin:12px 0 6px;overflow:visible}
+.ax{font-size:11px;fill:var(--mut)}
+.lg{display:inline-block;margin-right:16px;font-size:14px;color:var(--mut)}
+.lg i{display:inline-block;width:16px;height:4px;margin-right:6px;vertical-align:middle}
+.stages{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin-top:14px}
+.stages>div{border-top:2px solid var(--ink);padding-top:12px}
+.when{font-size:13px;color:var(--blue);font-weight:500;margin:0}
+.stages p{color:var(--mut);font-size:15px}
+dl{display:grid;grid-template-columns:220px minmax(0,1fr);gap:12px 24px;margin:0}
+dt{font-weight:600}
+dd{margin:0;color:var(--mut)}
+.foot{font-size:13px;color:var(--mut);margin-top:8px}
+@media (max-width:760px){.main,.stages,dl{grid-template-columns:1fr}.main{gap:18px}.stages{gap:20px}dt{margin-top:8px}.wrap{padding:24px 16px 40px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>Fairness audit lab</h1>
+<p class="lead">Who gets approved when a model makes the call? Choose a scenario, set how much historical disadvantage the data carries, and see which fairness metrics break, what the fixes cost in accuracy, and where each fix sits in the pipeline.</p>
+</header>
+
+<section>
+<h2>Approval rates by group</h2>
+<p class="small" id="scen"></p>
+<div id="hero"></div>
+<p class="small">The blue bar is the share the baseline model approves. The dark tick marks the share who are <span id="pos"></span>.</p>
+<p class="gapline" id="gapline"></p>
+</section>
+
+<div class="main">
+<aside class="controls">
+<label><b>Scenario</b><select id="sc"></select></label>
+<label><b>Historical disadvantage <output id="bv"></output></b><input id="bias" type="range" min="0" max="1" step="0.05" value="0.6"></label>
+<label><b>Decision threshold <output id="tv"></output></b><input id="thr" type="range" min="0.05" max="0.95" step="0.01" value="0.5"></label>
+<label><b>Fairness penalty λ <output id="lv"></output></b><input id="lam" type="range" min="0" max="8" step="0.5" value="3"></label>
+<label><b>Fairness target</b><select id="tgt"><option value="dp">Demographic parity</option><option value="eo">Equal opportunity</option></select></label>
+<label><b>Accuracy budget <output id="bdv"></output></b><input id="bud" type="range" min="0" max="0.1" step="0.005" value="0.02"></label>
+<button id="resample" type="button">Draw a new sample</button>
+<p class="small" id="info" style="margin-top:12px"></p>
+<p class="small">The fairness target drives the in-processing penalty and the group thresholds. The accuracy budget caps how much accuracy the group thresholds may give up.</p>
+</aside>
+<div>
+<section class="flush">
+<h2>Audit: four fairness metrics</h2>
+<p class="small">Each gap is the difference between the two groups, so zero means equal. DP is demographic parity, EOpp is equal opportunity, EOdds is equalized odds, and PP is predictive parity. Teal is under 0.05, brick is over 0.10.</p>
+<div class="scroll"><table id="tbl"></table></div>
+<p class="small" style="margin-top:10px">DI is the disparate impact ratio, the lower approval rate divided by the higher. Under 0.8 fails the four-fifths rule.</p>
+<div id="bars" style="margin-top:14px"></div>
+<p id="verdict" style="margin-top:14px"></p>
+</section>
+<section class="flush">
+<h2>Trade-offs as the threshold moves</h2>
+<p class="small">Every line uses the baseline model on the same test data. The dashed line is your current threshold.</p>
+<div id="curve"></div>
+<p id="theory" class="small"></p>
+</section>
+</div>
+</div>
+
+<section>
+<h2>Real data check: UCI Adult income</h2>
+<p class="small">The same methods on 45,222 adults from the 1994 US census, predicting income over $50K. Sex is the sensitive attribute and is removed from the features, but relationship and marital status still act as proxies. Trained on 70%, tested on 30%. Computed offline with fairlearn 0.15 and scikit-learn 1.8. The reweighing row is our own implementation, since fairlearn has none.</p>
+<div class="scroll"><table id="adult">
+<tr><th>Model</th><th>Accuracy</th><th>DP gap</th><th>EOpp gap</th><th>EOdds gap</th><th>PP gap</th><th>DI</th></tr>
+</table></div>
+<p class="small" id="adultnote" style="margin-top:10px"></p>
+<p class="small" style="margin-top:10px">Here the baseline already satisfies predictive parity almost exactly, so every constraint that moves approval rates opens a predictive parity gap. That is the impossibility result from the trade-offs section, showing up on real data.</p>
+</section>
+<section>
+<h2>Three places to intervene</h2>
+<p class="lead">Each fix acts at a different stage. The last one leaves the trained model untouched.</p>
+<div class="stages">
+<div><p class="when">Before training</p><h3>Preprocessing: reweighing</h3><p>Each training example gets a weight so that group and outcome look independent to the learner. The feature values stay the same.</p></div>
+<div><p class="when">During training</p><h3>In-processing: fairness penalty</h3><p>The loss gains a term that grows with the squared gap, so the optimizer trades accuracy for parity directly.</p></div>
+<div><p class="when">After training</p><h3>Post-processing: group thresholds</h3><p>One cut-off per group is chosen on training data within the accuracy budget, then applied to new people.</p></div>
+</div>
+</section>
+
+<section>
+<h2>What each metric asks</h2>
+<dl>
+<dt>Demographic parity</dt><dd>Both groups receive positive decisions at the same rate, whatever their true outcomes.</dd>
+<dt>Equal opportunity</dt><dd>Among people who truly qualify, both groups are approved at the same rate.</dd>
+<dt>Equalized odds</dt><dd>Equal approval rates among the qualified and among the unqualified. Stricter than equal opportunity.</dd>
+<dt>Predictive parity</dt><dd>Among people approved, the same share truly qualify, so an approval means the same thing for each group.</dd>
+</dl>
+</section>
+
+<footer>
+<p class="foot">Reweighing follows Kamiran and Calmon (2012). Group thresholds follow Hardt, Price and Srebro (2016). The trade-offs follow Kleinberg, Mullainathan and Raghavan (2016) and Chouldechova (2017). Data is synthetic and seeded, so the numbers show how the methods behave, not what a real system would do.</p>
+</footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const p0=v=>(v*100).toFixed(0)+'%',p1=v=>(v*100).toFixed(1)+'%',f3=v=>v.toFixed(3);
+const cls=v=>v<.05?'ok':v<.1?'mid':'no';
+const grp=(n,ap,ql)=>`<div class="grp"><span>${n}</span><div class="track" role="img" aria-label="${n}: ${p0(ap)} approved, ${p0(ql)} qualified"><i style="width:${ap*100}%"></i><b style="left:${ql*100}%"></b></div><output>${p0(ap)}</output></div>`;
+const bar=(l,v,c,t)=>`<div class="ib"><span>${l}</span><div class="track sm"><i style="width:${Math.min(v,1)*100}%;background:${c}"></i></div><output>${t}</output></div>`;
+let seed=42,timer=null,ctl=null,token=0;
+const settings=()=>({scenario:$('sc').value,seed,bias:+$('bias').value,threshold:+$('thr').value,lam:+$('lam').value,target:$('tgt').value,budget:+$('bud').value});
+function labels(){
+ $('bv').textContent=(+$('bias').value).toFixed(2);$('tv').textContent=(+$('thr').value).toFixed(2);$('lv').textContent=+$('lam').value;$('bdv').textContent=(+$('bud').value*100).toFixed(1)+' pts';
+}
+function render(d){
+ const sc={n:d.scenario.name,f:d.scenario.features,pB:d.scenario.p_group_b,pos:d.scenario.positive},tg=d.settings.target==='eo',t0=d.settings.threshold,tA=d.thresholds.A,tB=d.thresholds.B,qA=d.qualification.A,qB=d.qualification.B;
+ const rows=d.models.map(m=>[m.name,{...m,sr:[m.sr_A,m.sr_B]}]),m0=rows[0][1];
+
+ $('scen').textContent=`${sc.n}, using ${sc.f}. Group B is ${p0(sc.pB)} of applicants.`;
+ $('pos').textContent=sc.pos;
+ $('hero').innerHTML=grp('Group A',m0.sr[0],qA)+grp('Group B',m0.sr[1],qB);
+ $('gapline').innerHTML=`Approval gap: <strong>${(m0.dp*100).toFixed(1)} points</strong>, against a qualification gap of ${(Math.abs(qA-qB)*100).toFixed(1)} points. The qualification gap comes from the data, so the fixes below work on the approval gap instead.`;
+
+ $('tbl').innerHTML='<tr><th>Model</th><th>Accuracy</th><th>DP gap</th><th>EOpp gap</th><th>EOdds gap</th><th>PP gap</th><th>DI</th></tr>'+rows.map(([n,m])=>`<tr><td>${n}</td><td>${p1(m.acc)}</td><td class="${cls(m.dp)}">${f3(m.dp)}</td><td class="${cls(m.eo)}">${f3(m.eo)}</td><td class="${cls(m.eodds)}">${f3(m.eodds)}</td><td class="${cls(m.pp)}">${f3(m.pp)}</td><td class="${m.di>=.8?'ok':'no'}">${f3(m.di)}</td></tr>`).join('');
+ $('bars').innerHTML=rows.map(([n,m])=>`<p class="small" style="color:var(--ink);margin-bottom:0"><b>${n}</b></p>`+bar('Accuracy',m.acc,'var(--blue)',p1(m.acc))+bar('DP gap',m.dp,'var(--brick)',f3(m.dp))).join('');
+
+ const best=rows.reduce((a,b)=>b[1].acc>a[1].acc?b:a),fair=rows.reduce((a,b)=>(tg?b[1].eo<a[1].eo:b[1].dp<a[1].dp)?b:a);
+ $('verdict').innerHTML=`Most accurate: <strong>${best[0]}</strong>. Smallest ${tg?'equal opportunity':'demographic parity'} gap: <strong>${fair[0]}</strong>. Group thresholds came out at ${tA.toFixed(2)} for Group A and ${tB.toFixed(2)} for Group B.${best[0]!==fair[0]?' Those are different models, which is the trade-off in action.':''}`;
+
+ const curve=d.curve.map(q=>({t:q.t,m:q}));
+ const W=600,H=230,P=36,n=curve.length,X=i=>P+(W-2*P)*i/(n-1),Y=v=>H-P-(H-2*P)*Math.min(v,1);
+ const S=[['Accuracy',d=>d.m.acc,'var(--blue)',0],['DP gap',d=>d.m.dp,'var(--brick)',0],['EOpp gap',d=>d.m.eo,'var(--ink)',0],['PP gap',d=>d.m.pp,'var(--mut)',1]];
+ let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Accuracy and fairness gaps across decision thresholds"><line x1="${P}" x2="${W-P}" y1="${H-P}" y2="${H-P}" style="stroke:var(--rule)"/><line x1="${P}" x2="${P}" y1="${P/2}" y2="${H-P}" style="stroke:var(--rule)"/><text class="ax" x="${P-6}" y="${H-P+4}" text-anchor="end">0</text><text class="ax" x="${P-6}" y="${P/2+4}" text-anchor="end">1</text><text class="ax" x="${P}" y="${H-8}">0.05</text><text class="ax" x="${W-P}" y="${H-8}" text-anchor="end">0.95</text>`;
+ const xm=P+(W-2*P)*(t0-.05)/.9;
+ svg+=`<line x1="${xm}" x2="${xm}" y1="${P/2}" y2="${H-P}" stroke-dasharray="4 4" style="stroke:var(--mut)"/>`;
+ S.forEach(([,f,c,dash])=>{svg+=`<polyline fill="none" stroke-width="2.5" style="stroke:${c}" ${dash?'stroke-dasharray="6 4"':''} points="${curve.map((q,i)=>X(i)+','+Y(f(q))).join(' ')}"/>`});
+ svg+='</svg>';
+ $('curve').innerHTML=svg+S.map(([nm,,c])=>`<span class="lg"><i style="background:${c}"></i>${nm}</span>`).join('');
+ $('theory').textContent=`Base rates differ (${p0(qA)} against ${p0(qB)} qualified in the test data). When base rates differ and the classifier is imperfect, demographic parity, equal opportunity and predictive parity cannot all hold at once (Kleinberg et al., 2016; Chouldechova, 2017). Slide the threshold and watch the lines pull against each other.`;
+ $('info').textContent=`Live audit from the Python backend. Trained on ${d.n_train.toLocaleString('en-US')} people and tested on ${d.n_test.toLocaleString('en-US')} (seed ${d.seed}).`;
+}
+async function load(){
+ labels();
+ if(ctl)ctl.abort();
+ ctl=new AbortController();const my=++token;
+ try{
+  const r=await fetch('/api/audit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(settings()),signal:ctl.signal});
+  const d=await r.json();
+  if(my!==token)return;
+  if(!r.ok)throw new Error(d.error||r.statusText);
+  render(d);
+ }catch(e){
+  if(e.name==='AbortError'||my!==token)return;
+  $('info').textContent='Could not get results from the backend: '+e.message;
+ }
+}
+function schedule(){labels();clearTimeout(timer);timer=setTimeout(load,150)}
+const adultRow=r=>`<tr><td>${r.label}</td><td>${p1(r.acc)}</td><td class="${cls(r.dp)}">${f3(r.dp)}</td><td class="${cls(r.eo)}">${f3(r.eo)}</td><td class="${cls(r.eodds)}">${f3(r.eodds)}</td><td class="${cls(r.pp)}">${f3(r.pp)}</td><td class="${r.di>=.8?'ok':'no'}">${f3(r.di)}</td></tr>`;
+async function loadAdult(){
+ try{
+  const r=await fetch('/api/adult'),d=await r.json();
+  if(!r.ok)throw new Error(d.error||r.statusText);
+  $('adult').tBodies[0].insertAdjacentHTML('beforeend',d.rows.map(adultRow).join(''));
+  $('adultnote').textContent='Precomputed benchmark: these rows are read from '+d.file+', the saved output of scripts/run_adult.py. They do not change with the controls above, which run live on the backend.';
+ }catch(e){
+  $('adultnote').textContent='Could not load the Adult benchmark: '+e.message;
+ }
+}
+async function init(){
+ try{
+  const r=await fetch('/api/scenarios'),d=await r.json();
+  $('sc').innerHTML=d.scenarios.map(s=>`<option value="${s.key}">${s.name}</option>`).join('');
+  $('sc').value=d.defaults.scenario;
+ }catch(e){
+  $('info').textContent='Could not reach the backend: '+e.message;return;
+ }
+ document.querySelectorAll('input[type=range]').forEach(e=>e.addEventListener('input',schedule));
+ document.querySelectorAll('select').forEach(e=>e.addEventListener('change',schedule));
+ $('resample').addEventListener('click',()=>{seed++;clearTimeout(timer);load()});
+ loadAdult();
+ load();
+}
+init();
+</script>
+</body>
+</html>
